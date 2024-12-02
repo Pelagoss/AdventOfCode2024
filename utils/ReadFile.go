@@ -24,5 +24,5 @@ func ReadFile(pathFromCaller string) []string {
 	}
 	// trim off new lines and tabs at end of input files
 	strContent := string(content)
-	return strings.SplitAfter(strings.TrimRight(strContent, "\n"), "\n")
+	return strings.Split(strings.ReplaceAll(strContent, "\r", ""), "\n")
 }

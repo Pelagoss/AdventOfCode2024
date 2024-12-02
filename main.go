@@ -68,7 +68,38 @@ func main() {
 	if input != "all" {
 		day, err := strconv.Atoi(input)
 		if err != nil || day < 1 || day > len(folders) {
-			fmt.Println("Invalid day, stopping ...")
+			if day == len(folders)+1 {
+				fmt.Println("Invalid day, but creating it ...")
+				dirName := fmt.Sprintf("Day%02d", day)
+				err := os.Mkdir(dirName, 0750)
+
+				_, err = os.Create(fmt.Sprintf("%s/data", dirName))
+
+				if err != nil {
+					fmt.Println("Can't creat day, stopping ...")
+				}
+
+				mainFile, err := os.Create(fmt.Sprintf("%s/main.go", dirName))
+
+				if err != nil {
+					fmt.Println("Can't creat day, stopping ...")
+				} else {
+					_, err := mainFile.WriteString(
+						fmt.Sprintf("package %s\n%s\n%s",
+							dirName,
+							"import (\n\t\"adventOfCode/utils\"\n)",
+							"func ResolvePart1(data []string) int {\n\treturn 0\n}\nfunc ResolvePart2(data []string) int {\n\treturn 0\n}\nfunc Resolve(data []string) [2]int {\n\treturn [2]int{\n\t\tResolvePart1(data),\n\t\tResolvePart2(data),\n\t}\n}",
+						),
+					)
+
+					if err != nil {
+						return
+					}
+				}
+
+			} else {
+				fmt.Println("Invalid day, stopping ...")
+			}
 			return
 		}
 		executeDay(day, solutionMap)

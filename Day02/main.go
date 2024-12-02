@@ -4,7 +4,6 @@ import (
 	"adventOfCode/utils"
 	"slices"
 	"strconv"
-	"strings"
 )
 
 func check(report []int) bool {
@@ -49,7 +48,7 @@ func ResolvePart1(data []string) int {
 	var list []string
 
 	for i := 0; i < len(data); i++ {
-		splitted := utils.RegSplit(strings.TrimRight(data[i], "\n"), "\\s+")
+		splitted := utils.RegSplit(data[i], "\\s+")
 
 		var sliceAndInt []int
 
@@ -73,7 +72,7 @@ func ResolvePart2(data []string) int {
 	var badReports [][]int
 
 	for i := 0; i < len(data); i++ {
-		splitted := utils.RegSplit(strings.TrimRight(data[i], "\n"), "\\s+")
+		splitted := utils.RegSplit(data[i], "\\s+")
 
 		var sliceAndInt []int
 
