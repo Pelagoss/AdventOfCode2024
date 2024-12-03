@@ -14,3 +14,12 @@ func RegSplit(text string, delimeter string) []string {
 	result[len(indexes)] = text[laststart:len(text)]
 	return result
 }
+
+
+
+func RegMatch(text string, pattern string) [][]string {
+	reg := regexp.MustCompile(pattern)
+	result := reg.FindAllStringSubmatch(text, -1)
+	
+	return result
+}
