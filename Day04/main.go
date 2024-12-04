@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func countWordsFromPosition(wordToSearch string, firstLetter string, data [][]string, x int, y int, crossable bool) int {
+func countWordsFromPosition(wordToSearch string, firstLetter string, data [][]string, x int, y int, part int) int {
 	sum := 0
 	wordsLength := len(wordToSearch)
 	rightDiscoverable := false
@@ -34,30 +34,30 @@ func countWordsFromPosition(wordToSearch string, firstLetter string, data [][]st
 
 	words := make(map[string]string)
 
-	for i := 0; i < wordsLength; i++ {
-		letter := string(wordToSearch[i])
-		offset := i - firstLetterPos
+	for currentLetterPos := 0; currentLetterPos < wordsLength; currentLetterPos++ {
+		letter := string(wordToSearch[currentLetterPos])
+		offset := currentLetterPos - firstLetterPos
 		offsetAbs := utils.Abs(offset)
 
-		if rightDiscoverable && crossable {
+		if rightDiscoverable && part == 1 {
 			if data[y][x+offsetAbs] == letter {
 				words["right"] = words["right"] + letter
 			}
 		}
 
-		if leftDiscoverable && crossable {
+		if leftDiscoverable && part == 1 {
 			if data[y][x-offsetAbs] == letter {
 				words["left"] = words["left"] + letter
 			}
 		}
 
-		if topDiscoverable && crossable {
+		if topDiscoverable && part == 1 {
 			if data[y-offsetAbs][x] == letter {
 				words["top"] = words["top"] + letter
 			}
 		}
 
-		if bottomDiscoverable && crossable {
+		if bottomDiscoverable && part == 1 {
 			if data[y+offsetAbs][x] == letter {
 				words["bottom"] = words["bottom"] + letter
 			}
@@ -65,11 +65,11 @@ func countWordsFromPosition(wordToSearch string, firstLetter string, data [][]st
 
 		if rightDiscoverable && topDiscoverable {
 			if data[y-offsetAbs][x+offsetAbs] == letter {
-				if crossable {
+				if part == 1 {
 					words["rt"] = words["rt"] + letter
 				} else {
 					words["rt"] = words["rt"] + letter
-					if firstLetter != letter {
+					if currentLetterPos != firstLetterPos {
 						words["lb"] = words["lb"] + letter
 					}
 				}
@@ -78,11 +78,11 @@ func countWordsFromPosition(wordToSearch string, firstLetter string, data [][]st
 
 		if rightDiscoverable && bottomDiscoverable {
 			if data[y+offsetAbs][x+offsetAbs] == letter {
-				if crossable {
+				if part == 1 {
 					words["rb"] = words["rb"] + letter
 				} else {
 					words["rb"] = words["rb"] + letter
-					if firstLetter != letter {
+					if currentLetterPos != firstLetterPos {
 						words["lt"] = words["lt"] + letter
 					}
 				}
@@ -91,11 +91,11 @@ func countWordsFromPosition(wordToSearch string, firstLetter string, data [][]st
 
 		if leftDiscoverable && topDiscoverable {
 			if data[y-offsetAbs][x-offsetAbs] == letter {
-				if crossable {
+				if part == 1 {
 					words["lt"] = words["lt"] + letter
 				} else {
 					words["lt"] = words["lt"] + letter
-					if firstLetter != letter {
+					if currentLetterPos != firstLetterPos {
 						words["rb"] = words["rb"] + letter
 					}
 				}
@@ -104,11 +104,11 @@ func countWordsFromPosition(wordToSearch string, firstLetter string, data [][]st
 
 		if leftDiscoverable && bottomDiscoverable {
 			if data[y+offsetAbs][x-offsetAbs] == letter {
-				if crossable {
+				if part == 1 {
 					words["lb"] = words["lb"] + letter
 				} else {
 					words["lb"] = words["lb"] + letter
-					if firstLetter != letter {
+					if currentLetterPos != firstLetterPos {
 						words["rt"] = words["rt"] + letter
 					}
 				}
@@ -122,7 +122,7 @@ func countWordsFromPosition(wordToSearch string, firstLetter string, data [][]st
 		}
 	}
 
-	if crossable {
+	if part == 1 {
 		return sum
 	}
 
@@ -133,7 +133,7 @@ func countWordsFromPosition(wordToSearch string, firstLetter string, data [][]st
 	return 0
 }
 
-func ResolvePart1(data []string, wordToSearch string, indexFirstLetter int, crossable bool) int {
+func ResolvePart1(data []string, wordToSearch string, indexFirstLetter int, part int) int {
 	sum := 0
 	var matrix [][]string
 
@@ -144,7 +144,7 @@ func ResolvePart1(data []string, wordToSearch string, indexFirstLetter int, cros
 	for y := 0; y < len(matrix); y++ {
 		for x := 0; x < len(matrix[y]); x++ {
 			if matrix[y][x] == string(wordToSearch[indexFirstLetter]) {
-				sum += countWordsFromPosition(wordToSearch, string(wordToSearch[indexFirstLetter]), matrix, x, y, crossable)
+				sum += countWordsFromPosition(wordToSearch, string(wordToSearch[indexFirstLetter]), matrix, x, y, part)
 			}
 		}
 	}
@@ -153,12 +153,12 @@ func ResolvePart1(data []string, wordToSearch string, indexFirstLetter int, cros
 }
 
 func ResolvePart2(data []string) int {
-	return ResolvePart1(data, "MAS", 1, false)
+	return ResolvePart1(data, "MAS", 1, 2)
 }
 
 func Resolve(data []string) [2]int {
 	return [2]int{
-		ResolvePart1(data, "XMAS", 0, true),
+		ResolvePart1(data, "XMAS", 0, 1),
 		ResolvePart2(data),
 	}
 }
