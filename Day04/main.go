@@ -2,7 +2,6 @@ package Day04
 
 import (
 	"adventOfCode/utils"
-	"fmt"
 	"strings"
 )
 
@@ -17,19 +16,19 @@ func countWordsFromPosition(wordToSearch string, firstLetter string, data [][]st
 	firstLetterPos := strings.Index(wordToSearch, firstLetter)
 
 	// Right discoverable
-	if x <= len(data[y])-wordsLength {
+	if x <= (len(data[y]) - wordsLength + firstLetterPos) {
 		rightDiscoverable = true
 	}
 	// Left discoverable
-	if x >= (wordsLength - 1) {
+	if x >= (wordsLength - 1 - firstLetterPos) {
 		leftDiscoverable = true
 	}
 	// Top discoverable
-	if y >= (wordsLength - 1) {
+	if y >= (wordsLength - 1 - firstLetterPos) {
 		topDiscoverable = true
 	}
 	// Bottom discoverable
-	if y <= (len(data) - wordsLength) {
+	if y <= (len(data) - wordsLength + firstLetterPos) {
 		bottomDiscoverable = true
 	}
 
@@ -66,51 +65,55 @@ func countWordsFromPosition(wordToSearch string, firstLetter string, data [][]st
 
 		if rightDiscoverable && topDiscoverable {
 			if data[y-offsetAbs][x+offsetAbs] == letter {
-				//if offset >= 0 {
-				words["rt"] = words["rt"] + letter
-				//} else {
-				//	words["rt"] = letter + words["rt"]
-				//	words["lb"] = words["lb"] + letter
-				//}
+				if crossable {
+					words["rt"] = words["rt"] + letter
+				} else {
+					words["rt"] = words["rt"] + letter
+					if firstLetter != letter {
+						words["lb"] = words["lb"] + letter
+					}
+				}
 			}
 		}
 
 		if rightDiscoverable && bottomDiscoverable {
 			if data[y+offsetAbs][x+offsetAbs] == letter {
-				//if offset >= 0 {
-				words["rb"] = words["rb"] + letter
-				//} else {
-				//	words["rb"] = letter + words["rb"]
-				//	words["lt"] = words["lt"] + letter
-				//}
+				if crossable {
+					words["rb"] = words["rb"] + letter
+				} else {
+					words["rb"] = words["rb"] + letter
+					if firstLetter != letter {
+						words["lt"] = words["lt"] + letter
+					}
+				}
 			}
 		}
 
 		if leftDiscoverable && topDiscoverable {
 			if data[y-offsetAbs][x-offsetAbs] == letter {
-				//if offset >= 0 {
-				words["lt"] = words["lt"] + letter
-				//} else {
-				//	words["lt"] = letter + words["lt"]
-				//	words["rb"] = words["rb"] + letter
-				//}
+				if crossable {
+					words["lt"] = words["lt"] + letter
+				} else {
+					words["lt"] = words["lt"] + letter
+					if firstLetter != letter {
+						words["rb"] = words["rb"] + letter
+					}
+				}
 			}
 		}
 
 		if leftDiscoverable && bottomDiscoverable {
 			if data[y+offsetAbs][x-offsetAbs] == letter {
-				//if offset >= 0 {
-				words["lb"] = words["lb"] + letter
-				//} else {
-				//	words["rt"] = words["rt"] + letter
-				//	words["lb"] = letter + words["lb"]
-				//}
+				if crossable {
+					words["lb"] = words["lb"] + letter
+				} else {
+					words["lb"] = words["lb"] + letter
+					if firstLetter != letter {
+						words["rt"] = words["rt"] + letter
+					}
+				}
 			}
 		}
-	}
-
-	if y == 1 && crossable == false {
-		fmt.Println(words)
 	}
 
 	for k := range words {
@@ -119,7 +122,15 @@ func countWordsFromPosition(wordToSearch string, firstLetter string, data [][]st
 		}
 	}
 
-	return sum
+	if crossable {
+		return sum
+	}
+
+	if sum == 4 {
+		return 1
+	}
+
+	return 0
 }
 
 func ResolvePart1(data []string, wordToSearch string, indexFirstLetter int, crossable bool) int {
@@ -134,9 +145,6 @@ func ResolvePart1(data []string, wordToSearch string, indexFirstLetter int, cros
 		for x := 0; x < len(matrix[y]); x++ {
 			if matrix[y][x] == string(wordToSearch[indexFirstLetter]) {
 				sum += countWordsFromPosition(wordToSearch, string(wordToSearch[indexFirstLetter]), matrix, x, y, crossable)
-				if y == 1 && !crossable {
-					panic("aa")
-				}
 			}
 		}
 	}

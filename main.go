@@ -142,7 +142,7 @@ func getDirectories(path string) []string {
 
 func executeDay(day int, solutionMap map[int]ResolverFunc) {
 	dayFolder := fmt.Sprintf("Day%02d", day)
-	dataFile := filepath.Join(dayFolder, "datatest")
+	dataFile := filepath.Join(dayFolder, "data")
 	data := utils.ReadFile(dataFile)
 
 	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
