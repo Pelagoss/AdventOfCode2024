@@ -6,6 +6,7 @@ import (
 	"adventOfCode/Day03"
 	"adventOfCode/Day04"
 	"adventOfCode/Day05"
+	"adventOfCode/Day06"
 	"adventOfCode/utils"
 	"bufio"
 	"fmt"
@@ -29,6 +30,7 @@ func main() {
 		3: Day03.Resolve,
 		4: Day04.Resolve,
 		5: Day05.Resolve,
+		6: Day06.Resolve,
 	}
 
 	fmt.Println("\033[1m\033[32mAdvent of code 2024\033[0m")
@@ -75,34 +77,7 @@ func main() {
 		day, err := strconv.Atoi(input)
 		if err != nil || day < 1 || day > len(folders) {
 			if day == len(folders)+1 {
-				fmt.Println("Invalid day, but creating it ...")
-				dirName := fmt.Sprintf("Day%02d", day)
-				err := os.Mkdir(dirName, 0750)
-
-				_, err = os.Create(fmt.Sprintf("%s/data", dirName))
-
-				if err != nil {
-					fmt.Println("Can't creat day, stopping ...")
-				}
-
-				mainFile, err := os.Create(fmt.Sprintf("%s/main.go", dirName))
-
-				if err != nil {
-					fmt.Println("Can't creat day, stopping ...")
-				} else {
-					_, err := mainFile.WriteString(
-						fmt.Sprintf("package %s\n%s\n%s",
-							dirName,
-							"import (\n\t\"adventOfCode/utils\"\n)",
-							"func ResolvePart1(data []string) int {\n\treturn 0\n}\nfunc ResolvePart2(data []string) int {\n\treturn 0\n}\nfunc Resolve(data []string) [2]int {\n\treturn [2]int{\n\t\tResolvePart1(data),\n\t\tResolvePart2(data),\n\t}\n}",
-						),
-					)
-
-					if err != nil {
-						return
-					}
-				}
-
+				createDay(day)
 			} else {
 				fmt.Println("Invalid day, stopping ...")
 			}
@@ -112,6 +87,36 @@ func main() {
 	} else {
 		for day := 1; day <= len(folders); day++ {
 			executeDay(day, solutionMap)
+		}
+	}
+}
+
+func createDay(day int) {
+	fmt.Println("Invalid day, but creating it ...")
+	dirName := fmt.Sprintf("Day%02d", day)
+	err := os.Mkdir(dirName, 0750)
+
+	_, err = os.Create(fmt.Sprintf("%s/data", dirName))
+
+	if err != nil {
+		fmt.Println("Can't creat day, stopping ...")
+	}
+
+	mainFile, err := os.Create(fmt.Sprintf("%s/main.go", dirName))
+
+	if err != nil {
+		fmt.Println("Can't creat day, stopping ...")
+	} else {
+		_, err := mainFile.WriteString(
+			fmt.Sprintf("package %s\n%s\n%s",
+				dirName,
+				"import (\n\t\"adventOfCode/utils\"\n)",
+				"func ResolvePart1(data []string) int {\n\treturn 0\n}\nfunc ResolvePart2(data []string) int {\n\treturn 0\n}\nfunc Resolve(data []string) [2]int {\n\treturn [2]int{\n\t\tResolvePart1(data),\n\t\tResolvePart2(data),\n\t}\n}",
+			),
+		)
+
+		if err != nil {
+			return
 		}
 	}
 }
@@ -157,9 +162,13 @@ func executeDay(day int, solutionMap map[int]ResolverFunc) {
 	tbl := table.New(fmt.Sprintf("Day%02d", day), "Part", "Value")
 	tbl.WithHeaderFormatter(headerFmt).WithFirstColumnFormatter(columnFmt)
 
-	for i, value := range solutionMap[day](data) {
-		tbl.AddRow("", i+1, value)
-	}
+	if solutionMap[day] != nil {
+		for i, value := range solutionMap[day](data) {
+			tbl.AddRow("", i+1, value)
+		}
 
-	tbl.Print()
+		tbl.Print()
+	} else {
+		createDay(day)
+	}
 }
