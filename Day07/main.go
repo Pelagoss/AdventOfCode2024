@@ -3,6 +3,7 @@ package Day07
 import (
 	"fmt"
 	"math"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -21,20 +22,24 @@ func ResolvePart1(data []string) int {
 
 		values := strings.Split(strings.Trim(split[1], " "), " ")
 
-		for j := 0; j < int(math.Pow(2, float64(len(values))))-1; j++ {
-			calc := 0
+		for j := 0; j < int(math.Pow(2, float64(len(values))-1)); j++ {
+			firstValue, err := strconv.Atoi(values[0])
 
-			for k := 0; k < len(values); k++ {
+			if err != nil {
+				panic("aaaah")
+			}
+
+			calc := firstValue
+
+			for k := 1; k < len(values); k++ {
 				currValue, err := strconv.Atoi(values[k])
 
 				if err != nil {
 					panic("aaaah")
 				}
 
-				if (j>>k)&1 == 1 && k != 0 {
+				if (j>>(k-1))&1 == 1 {
 					calc = calc * currValue
-				} else if k == 0 && j == 0 {
-					calc = currValue
 				} else {
 					calc += currValue
 				}
@@ -62,12 +67,17 @@ func ResolvePart2(data []string) int {
 		}
 
 		values := strings.Split(strings.Trim(split[1], " "), " ")
-		fmt.Printf("%v => donc %v boucles => de 0 a %v\n", values, int(math.Pow(3, float64(len(values)-1))), int(math.Pow(3, float64(len(values)-1)))-1)
 
 		for j := 0; j < int(math.Pow(3, float64(len(values)-1))); j++ {
-			calc := 0
+			firstValue, err := strconv.Atoi(values[0])
 
-			for k := 0; k < len(values); k++ {
+			if err != nil {
+				panic("aaaah")
+			}
+
+			calc := firstValue
+
+			for k := 1; k < len(values); k++ {
 				currValue, err := strconv.Atoi(values[k])
 
 				if err != nil {
@@ -75,44 +85,30 @@ func ResolvePart2(data []string) int {
 				}
 
 				reverseJBase3 := strings.Split(strconv.FormatInt(int64(j), 3), "")
-				for len(reverseJBase3) < len(values) {
+
+				slices.Reverse(reverseJBase3)
+
+				for len(reverseJBase3) < len(values)-1 {
 					reverseJBase3 = append(reverseJBase3, "0")
 				}
 
-				if i == 6 {
-					fmt.Println(reverseJBase3)
-					fmt.Printf("j : %v  | k : %v | j en base3 : %v | bit k dans j : %v \n", j, k, strconv.FormatInt(int64(j), 3), reverseJBase3[k])
-				}
+				slices.Reverse(reverseJBase3)
 
-				if k == 0 {
-					calc = currValue
-					fmt.Printf("%v\n", currValue)
-				} else if reverseJBase3[k] == "0" {
-					fmt.Printf("%v+%v\n", calc, currValue)
+				if reverseJBase3[k-1] == "0" {
 					calc += currValue
-				} else if reverseJBase3[k] == "1" {
-					fmt.Printf("%v*%v\n", calc, currValue)
+				} else if reverseJBase3[k-1] == "1" {
 					calc = calc * currValue
-				} else if reverseJBase3[k] == "2" {
+				} else if reverseJBase3[k-1] == "2" {
 					value, err := strconv.Atoi(fmt.Sprintf("%v%v", calc, currValue))
 					if err != nil {
 						panic("aaaaaaa")
 					}
-					fmt.Printf("%v%v\n", calc, currValue)
 					calc = value
 				}
 			}
 
-			if i == 6 {
-				fmt.Println(calc)
-			}
-
 			if resValue == calc {
 				globalSum = globalSum + resValue
-				if i != 6 {
-					fmt.Println(calc)
-				}
-				fmt.Println("break !")
 				break
 			}
 		}
