@@ -8,6 +8,7 @@ import (
 	"adventOfCode/Day05"
 	"adventOfCode/Day06"
 	"adventOfCode/Day07"
+	"adventOfCode/Day08"
 	"adventOfCode/utils"
 	"bufio"
 	"fmt"
@@ -33,6 +34,7 @@ func main() {
 		5: Day05.Resolve,
 		6: Day06.Resolve,
 		7: Day07.Resolve,
+		8: Day08.Resolve,
 	}
 
 	fmt.Println("\033[1m\033[32mAdvent of code 2024\033[0m")
