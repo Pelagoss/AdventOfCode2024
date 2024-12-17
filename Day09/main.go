@@ -96,7 +96,7 @@ func ResolvePart2(data []string) int {
 	values := strings.Split(line, "")
 
 	toggle := true
-	highestInitial := int(math.RoundToEven(float64(len(values))/2) - 1)
+	highestInitial := 0
 
 	id := 0
 	nGetEnd := 0
@@ -115,8 +115,11 @@ func ResolvePart2(data []string) int {
 			for j := 0; j < val; j++ {
 				diskDefragmented = append(diskDefragmented, fmt.Sprintf("%v", id))
 			}
-			//	disk = append(disk, fmt.Sprintf("%v", id))
 			disk = append(disk, val)
+
+			if id > highestInitial {
+				highestInitial = id
+			}
 
 			toggle = false
 			id++
@@ -129,48 +132,66 @@ func ResolvePart2(data []string) int {
 		}
 	}
 
-	fmt.Println(disk)
-	fmt.Println(diskVide)
-	fmt.Println(highestInitial)
-	fmt.Println(diskDefragmented)
-
 	for i := 0; i < (len(disk)-1)+(len(diskVide)-1); i++ {
 		diskDefragmented = append(diskDefragmented, ".")
 	}
 
-	sum := 0
 	highest := highestInitial
-	for i := len(diskVide); i > 0; i-- {
-		index := slices.IndexFunc(diskVide, func(n int) bool { return n >= disk[i] })
+	for i := len(disk) - 1; i > 0; i-- {
+		index := -1
+
+		indexMax := slices.Index(diskDefragmented, fmt.Sprintf("%v", highest))
+		countDot := 0
+
+		for l := 0; l < indexMax; l++ {
+			countDot = 0
+
+			for k := 0; k < disk[i]; k++ {
+				if diskDefragmented[l+k] == "." {
+					countDot++
+				}
+			}
+
+			if countDot == disk[i] && countDot > 0 {
+				index = l
+				break
+			}
+		}
+
 		if index == -1 {
 			highest--
 			continue
 		}
-		fmt.Println(index)
-		fmt.Println(diskVide[index])
-		fmt.Println(disk[i])
 
-		if diskVide[index] >= disk[i] {
-			for j := 0; j < disk[i]; j++ {
-				diskDefragmented = remove(diskDefragmented, (disk[i]-1)+(diskVide[index]-1)+j)
-				diskDefragmented = insert(diskDefragmented, (disk[i]-1)+(diskVide[index]-1)+j, fmt.Sprintf("%v", highest))
-			}
+		indexToDel := slices.Index(diskDefragmented, fmt.Sprintf("%v", highest))
+		if indexToDel < 0 {
+			continue
+		}
+
+		for j := 0; j < disk[i]; j++ {
+			diskDefragmented = remove(diskDefragmented, indexToDel+j)
+			diskDefragmented = insert(diskDefragmented, indexToDel+j, ".")
+
+			diskDefragmented = remove(diskDefragmented, index+j)
+			diskDefragmented = insert(diskDefragmented, index+j, fmt.Sprintf("%v", highest))
 		}
 		highest--
-
-		val := disk[i]
-
-		//if err != nil {
-		//	panic(err)
-		//}
-		sum += i * val
-		//fmt.Printf("%v + ", i*disk[i])
-		fmt.Println(diskDefragmented)
-		//panic("aa")
 	}
-	//fmt.Printf("\n")
 
-	fmt.Println(diskDefragmented)
+	sum := 0
+	for i := 0; i < len(diskDefragmented); i++ {
+		if diskDefragmented[i] == "." {
+			continue
+		}
+
+		val, err := strconv.Atoi(diskDefragmented[i])
+		if err != nil {
+			panic(err)
+		}
+
+		sum += i * val
+	}
+
 	return sum
 }
 func Resolve(data []string) [2]int {
