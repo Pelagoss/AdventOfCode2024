@@ -12,6 +12,7 @@ import (
 	"adventOfCode/Day09"
 	"adventOfCode/Day10"
 	"adventOfCode/Day11"
+	"adventOfCode/Day12"
 	"adventOfCode/utils"
 	"bufio"
 	"fmt"
@@ -39,6 +40,7 @@ func main() {
 		9:  Day09.Resolve,
 		10: Day10.Resolve,
 		11: Day11.Resolve,
+		12: Day12.Resolve,
 	}
 
 	fmt.Println("\033[1m\033[32mAdvent of code 2024\033[0m")
@@ -101,7 +103,7 @@ func main() {
 
 func executeDay(day int, solutionMap map[int]ResolverFunc) {
 	dayFolder := fmt.Sprintf("Day%02d", day)
-	dataFile := filepath.Join(dayFolder, "data")
+	dataFile := filepath.Join(dayFolder, "test")
 	data := utils.ReadFile(dataFile)
 
 	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
