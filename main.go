@@ -11,6 +11,7 @@ import (
 	"adventOfCode/Day08"
 	"adventOfCode/Day09"
 	"adventOfCode/Day10"
+	"adventOfCode/Day11"
 	"adventOfCode/utils"
 	"bufio"
 	"fmt"
@@ -18,8 +19,6 @@ import (
 	"github.com/rodaine/table"
 	"os"
 	"path/filepath"
-	"regexp"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -39,13 +38,14 @@ func main() {
 		8:  Day08.Resolve,
 		9:  Day09.Resolve,
 		10: Day10.Resolve,
+		11: Day11.Resolve,
 	}
 
 	fmt.Println("\033[1m\033[32mAdvent of code 2024\033[0m")
 	fmt.Println("List of available solutions:")
 
 	// Récupérer les dossiers correspondant aux jours
-	folders := getDirectories(".")
+	folders := utils.GetDirectories(".")
 	currentDate := time.Now()
 	isDuringAdvent := currentDate.Month() == time.December && currentDate.Day() <= 25
 
@@ -85,7 +85,7 @@ func main() {
 		day, err := strconv.Atoi(input)
 		if err != nil || day < 1 || day > len(folders) {
 			if day == len(folders)+1 {
-				createDay(day)
+				utils.CreateDay(day)
 			} else {
 				fmt.Println("Invalid day, stopping ...")
 			}
@@ -97,62 +97,6 @@ func main() {
 			executeDay(day, solutionMap)
 		}
 	}
-}
-
-func createDay(day int) {
-	fmt.Println("Invalid day, but creating it ...")
-	dirName := fmt.Sprintf("Day%02d", day)
-	err := os.Mkdir(dirName, 0750)
-
-	_, err = os.Create(fmt.Sprintf("%s/data", dirName))
-
-	if err != nil {
-		fmt.Println("Can't creat day, stopping ...")
-	}
-
-	mainFile, err := os.Create(fmt.Sprintf("%s/main.go", dirName))
-
-	if err != nil {
-		fmt.Println("Can't creat day, stopping ...")
-	} else {
-		_, err := mainFile.WriteString(
-			fmt.Sprintf("package %s\n%s\n%s",
-				dirName,
-				"import (\n\t\"adventOfCode/utils\"\n)",
-				"func ResolvePart1(data []string) int {\n\treturn 0\n}\nfunc ResolvePart2(data []string) int {\n\treturn 0\n}\nfunc Resolve(data []string) [2]int {\n\treturn [2]int{\n\t\tResolvePart1(data),\n\t\tResolvePart2(data),\n\t}\n}",
-			),
-		)
-
-		if err != nil {
-			return
-		}
-	}
-}
-
-// getDirectories retourne la liste des dossiers contenant "Day"
-func getDirectories(path string) []string {
-	files, err := os.ReadDir(path)
-	if err != nil {
-		fmt.Println("Error reading directory:", err)
-		os.Exit(1)
-	}
-
-	var folders []string
-	re := regexp.MustCompile(`Day\s*(\d+)`)
-	for _, file := range files {
-		if file.IsDir() && re.MatchString(file.Name()) {
-			folders = append(folders, file.Name())
-		}
-	}
-
-	// Trier par numéro de jour
-	sort.Slice(folders, func(i, j int) bool {
-		num1, _ := strconv.Atoi(re.FindStringSubmatch(folders[i])[1])
-		num2, _ := strconv.Atoi(re.FindStringSubmatch(folders[j])[1])
-		return num1 < num2
-	})
-
-	return folders
 }
 
 func executeDay(day int, solutionMap map[int]ResolverFunc) {
@@ -177,6 +121,6 @@ func executeDay(day int, solutionMap map[int]ResolverFunc) {
 
 		tbl.Print()
 	} else {
-		createDay(day)
+		utils.CreateDay(day)
 	}
 }
