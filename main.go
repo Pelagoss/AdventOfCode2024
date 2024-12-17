@@ -10,6 +10,7 @@ import (
 	"adventOfCode/Day07"
 	"adventOfCode/Day08"
 	"adventOfCode/Day09"
+	"adventOfCode/Day10"
 	"adventOfCode/utils"
 	"bufio"
 	"fmt"
@@ -28,15 +29,16 @@ type ResolverFunc func([]string) [2]int
 
 func main() {
 	solutionMap := map[int]ResolverFunc{
-		1: Day01.Resolve,
-		2: Day02.Resolve,
-		3: Day03.Resolve,
-		4: Day04.Resolve,
-		5: Day05.Resolve,
-		6: Day06.Resolve,
-		7: Day07.Resolve,
-		8: Day08.Resolve,
-		9: Day09.Resolve,
+		1:  Day01.Resolve,
+		2:  Day02.Resolve,
+		3:  Day03.Resolve,
+		4:  Day04.Resolve,
+		5:  Day05.Resolve,
+		6:  Day06.Resolve,
+		7:  Day07.Resolve,
+		8:  Day08.Resolve,
+		9:  Day09.Resolve,
+		10: Day10.Resolve,
 	}
 
 	fmt.Println("\033[1m\033[32mAdvent of code 2024\033[0m")
