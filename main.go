@@ -117,7 +117,7 @@ func main() {
 
 func executeDay(day int, solutionMap map[int]ResolverFunc) {
 	dayFolder := fmt.Sprintf("Day%02d", day)
-	dataFile := filepath.Join(dayFolder, "data")
+	dataFile := filepath.Join(dayFolder, "test")
 	data := utils.ReadFile(dataFile)
 
 	headerFmt := color.New(color.FgGreen, color.Underline).SprintfFunc()
