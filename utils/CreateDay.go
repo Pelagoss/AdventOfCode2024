@@ -3,6 +3,7 @@ package utils
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"slices"
 	"strings"
 )
@@ -85,6 +86,13 @@ func CreateDay(day int) {
 			if err != nil {
 				return
 			}
+
+			cmd := exec.Command("git", "add", fmt.Sprintf("%s/.", dirName))
+			cmd.Output()
+			cmd = exec.Command("git", "commit", fmt.Sprintf("-am\"%s: created\"", dirName))
+			cmd.Output()
+			cmd = exec.Command("git", "push")
+			cmd.Output()
 		}
 	}
 }
