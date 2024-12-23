@@ -93,6 +93,12 @@ func CreateDay(day int) {
 			cmd.Output()
 			cmd = exec.Command("git", "push")
 			cmd.Output()
+
+			_, err = os.Create(fmt.Sprintf("%s/test", dirName))
+
+			if err != nil {
+				return
+			}
 		}
 	}
 }
