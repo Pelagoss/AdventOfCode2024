@@ -89,7 +89,7 @@ func CreateDay(day int) {
 
 			cmd := exec.Command("git", "add", fmt.Sprintf("%s/.", dirName))
 			cmd.Output()
-			cmd = exec.Command("git", "commit", fmt.Sprintf("-am\"%s: created\"", dirName))
+			cmd = exec.Command("git", "commit", "-am", fmt.Sprintf("%s: created", dirName))
 			cmd.Output()
 			cmd = exec.Command("git", "push")
 			cmd.Output()
