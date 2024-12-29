@@ -116,8 +116,8 @@ func ResolvePart2(data []string) int {
 
 	return globalSum
 }
-func Resolve(data []string) [2]int {
-	return [2]int{
+func Resolve(data []string) [2]any {
+	return [2]any{
 		ResolvePart1(data),
 		ResolvePart2(data),
 	}

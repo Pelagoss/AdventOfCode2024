@@ -91,8 +91,8 @@ func solve(data []string, part int) int {
 
 	return sum
 }
-func Resolve(data []string) [2]int {
-	return [2]int{
+func Resolve(data []string) [2]any {
+	return [2]any{
 		solve(data, 1),
 		solve(data, 2),
 	}

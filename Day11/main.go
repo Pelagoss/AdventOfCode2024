@@ -34,7 +34,7 @@ func BlinkStone(stone string) []string {
 	return nextStones
 }
 
-func Solve(data []string) [2]int {
+func Solve(data []string) [2]any {
 	stones := strings.Split(data[0], " ")
 
 	part1 := 0
@@ -71,8 +71,8 @@ func Solve(data []string) [2]int {
 		part2 += v
 	}
 
-	return [2]int{part1, part2}
+	return [2]any{part1, part2}
 }
-func Resolve(data []string) [2]int {
+func Resolve(data []string) [2]any {
 	return Solve(data)
 }

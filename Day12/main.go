@@ -140,7 +140,7 @@ func greedySearchNextPoint(greedySearch []Travel, RegionData *map[int]map[int]Da
 	}
 }
 
-func ResolveParts(data []string) [2]int {
+func ResolveParts(data []string) [2]any {
 	RegionData := make(map[int]map[int]Data)
 
 	var listRegions []Region
@@ -218,9 +218,9 @@ func ResolveParts(data []string) [2]int {
 
 		cost2 += listRegions[newK].area * (sides1 + sides2)
 	}
-	return [2]int{cost1, cost2}
+	return [2]any{cost1, cost2}
 }
 
-func Resolve(data []string) [2]int {
+func Resolve(data []string) [2]any {
 	return ResolveParts(data)
 }

@@ -32,7 +32,7 @@ import (
 	"time"
 )
 
-type ResolverFunc func([]string) [2]int
+type ResolverFunc func([]string) [2]any
 
 func main() {
 	solutionMap := map[int]ResolverFunc{

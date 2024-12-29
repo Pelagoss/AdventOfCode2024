@@ -2,6 +2,7 @@ package Day17
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 )
@@ -11,9 +12,43 @@ type Register struct {
 	value  int
 }
 
-func parseData(data []string) ([]int, []Register) {
+func pmod(x, d int) int {
+	x = x % d
+	if x >= 0 {
+		return x
+	}
+	if d < 0 {
+		return x - d
+	}
+	return x + d
+}
+
+func getComboOperand(index int, program []int, registers map[string]Register, literal bool) (int, any) {
+	if index > len(program) {
+		return 0, true // halts
+	}
+
+	if literal {
+		return program[index], nil
+	}
+
+	switch program[index] {
+	case 0, 1, 2, 3:
+		return program[index], nil
+	case 4:
+		return registers["A"].value, nil
+	case 5:
+		return registers["B"].value, nil
+	case 6:
+		return registers["C"].value, nil
+	}
+
+	return 0, nil
+}
+
+func parseData(data []string) ([]int, map[string]Register) {
 	var (
-		registers []Register
+		registers = make(map[string]Register)
 		program   []int
 	)
 	parseRegister := true
@@ -25,14 +60,13 @@ func parseData(data []string) ([]int, []Register) {
 
 		if parseRegister {
 			r := Register{}
-			fmt.Println(data[i])
 			_, err := fmt.Sscanf(strings.ReplaceAll(data[i], ":", ""), "Register %s %d", &r.letter, &r.value)
 
 			if err != nil {
 				panic(err)
 			}
 
-			registers = append(registers, r)
+			registers[r.letter] = r
 		} else {
 			var programStr string
 			_, err := fmt.Sscanf(data[i], "Program: %s", &programStr)
@@ -56,16 +90,224 @@ func parseData(data []string) ([]int, []Register) {
 
 	return program, registers
 }
-func ResolvePart1(data []string) int {
+func ResolvePart1(data []string) string {
 	program, registers := parseData(data)
-	fmt.Println(program, registers)
-	return 0
+	var out []string
+	instructionPointer := 0
+	needToBreak := false
+	for needToBreak == false {
+		needToIncrementTwice := true
+
+		switch program[instructionPointer] {
+		case 0: // adv
+			comboOperand, err := getComboOperand(instructionPointer+1, program, registers, false)
+			if err != nil {
+				needToBreak = true
+			}
+			r := registers["A"]
+			r.value = int(float64(r.value) / math.Pow(float64(2), float64(comboOperand)))
+			registers[r.letter] = r
+			break
+		case 1: // bxl
+			literalComboOperand, err := getComboOperand(instructionPointer+1, program, registers, true)
+			if err != nil {
+				needToBreak = true
+			}
+			r := registers["B"]
+			r.value = r.value ^ literalComboOperand
+			registers[r.letter] = r
+			break
+		case 2: // bst
+			comboOperand, err := getComboOperand(instructionPointer+1, program, registers, false)
+			if err != nil {
+				needToBreak = true
+			}
+			r := registers["B"]
+			r.value = pmod(comboOperand, 8)
+			registers[r.letter] = r
+			break
+		case 3: // jnz
+			if registers["A"].value == 0 {
+				break
+			}
+			literalComboOperand, err := getComboOperand(instructionPointer+1, program, registers, true)
+			if err != nil {
+				needToBreak = true
+			}
+			instructionPointer = literalComboOperand
+			needToIncrementTwice = false
+			break
+		case 4: // bxc
+			r := registers["B"]
+			r.value = r.value ^ registers["C"].value
+			registers[r.letter] = r
+			break
+		case 5: // out
+			comboOperand, err := getComboOperand(instructionPointer+1, program, registers, false)
+			if err != nil {
+				needToBreak = true
+			}
+			out = append(out, fmt.Sprintf("%d", pmod(comboOperand, 8)))
+			break
+		case 6: // bdv
+			comboOperand, err := getComboOperand(instructionPointer+1, program, registers, false)
+			if err != nil {
+				needToBreak = true
+			}
+			r := registers["B"]
+			r.value = int(float64(registers["A"].value) / math.Pow(float64(2), float64(comboOperand)))
+			registers[r.letter] = r
+			break
+		case 7: // cdv
+			comboOperand, err := getComboOperand(instructionPointer+1, program, registers, false)
+			if err != nil {
+				needToBreak = true
+			}
+			r := registers["C"]
+			r.value = int(float64(registers["A"].value) / math.Pow(float64(2), float64(comboOperand)))
+			registers[r.letter] = r
+			break
+		}
+
+		if needToIncrementTwice {
+			instructionPointer += 2
+		}
+
+		if instructionPointer >= len(program) {
+			needToBreak = true
+		}
+		needToIncrementTwice = true
+	}
+
+	return strings.Join(out, ",")
 }
+
 func ResolvePart2(data []string) int {
-	return 0
+
+	program, registers := parseData(data)
+
+	initValue := 0
+
+	ra := registers["A"]
+	ra.value = initValue
+	registers[ra.letter] = ra
+
+	var out []string
+	instructionPointer := 0
+	needToBreak := false
+	for i := len(program) - 1; i >= 0; i-- {
+		initValue *= 8
+		currTest := program[:i]
+		var currTestStr []string
+		for j := 0; j < len(currTest); j++ {
+			currTestStr = append(currTestStr, fmt.Sprintf("%d", currTest[j]))
+		}
+
+		for {
+			needToBreak = false
+			out = nil
+			rA := registers["A"]
+			instructionPointer = 0
+			rA.value = initValue
+			registers[rA.letter] = rA
+
+			for needToBreak == false {
+				needToIncrementTwice := true
+
+				switch program[instructionPointer] {
+				case 0: // adv
+					comboOperand, err := getComboOperand(instructionPointer+1, program, registers, false)
+					if err != nil {
+						needToBreak = true
+					}
+					r := registers["A"]
+					r.value = int(float64(r.value) / math.Pow(float64(2), float64(comboOperand)))
+					registers[r.letter] = r
+					break
+				case 1: // bxl
+					literalComboOperand, err := getComboOperand(instructionPointer+1, program, registers, true)
+					if err != nil {
+						needToBreak = true
+					}
+					r := registers["B"]
+					r.value = r.value ^ literalComboOperand
+					registers[r.letter] = r
+					break
+				case 2: // bst
+					comboOperand, err := getComboOperand(instructionPointer+1, program, registers, false)
+					if err != nil {
+						needToBreak = true
+					}
+					r := registers["B"]
+					r.value = pmod(comboOperand, 8)
+					registers[r.letter] = r
+					break
+				case 3: // jnz
+					if registers["A"].value == 0 {
+						break
+					}
+					literalComboOperand, err := getComboOperand(instructionPointer+1, program, registers, true)
+					if err != nil {
+						needToBreak = true
+					}
+					instructionPointer = literalComboOperand
+					needToIncrementTwice = false
+					break
+				case 4: // bxc
+					r := registers["B"]
+					r.value = r.value ^ registers["C"].value
+					registers[r.letter] = r
+					break
+				case 5: // out
+					comboOperand, err := getComboOperand(instructionPointer+1, program, registers, false)
+					if err != nil {
+						needToBreak = true
+					}
+					out = append(out, fmt.Sprintf("%d", pmod(comboOperand, 8)))
+					break
+				case 6: // bdv
+					comboOperand, err := getComboOperand(instructionPointer+1, program, registers, false)
+					if err != nil {
+						needToBreak = true
+					}
+					r := registers["B"]
+					r.value = int(float64(registers["A"].value) / math.Pow(float64(2), float64(comboOperand)))
+					registers[r.letter] = r
+					break
+				case 7: // cdv
+					comboOperand, err := getComboOperand(instructionPointer+1, program, registers, false)
+					if err != nil {
+						needToBreak = true
+					}
+					r := registers["C"]
+					r.value = int(float64(registers["A"].value) / math.Pow(float64(2), float64(comboOperand)))
+					registers[r.letter] = r
+					break
+				}
+
+				if needToIncrementTwice {
+					instructionPointer += 2
+				}
+
+				if instructionPointer >= len(program) {
+					needToBreak = true
+				}
+				needToIncrementTwice = true
+			}
+
+			//on compare les valeurs
+			if strings.Join(out, ",") == strings.Join(currTestStr, ",") {
+				break
+			}
+
+			initValue = initValue + 1
+		}
+	}
+
+	return initValue
 }
-func Resolve(data []string) [2]int {
-	return [2]int{
+func Resolve(data []string) [2]any {
+	return [2]any{
 		ResolvePart1(data),
 		ResolvePart2(data),
 	}

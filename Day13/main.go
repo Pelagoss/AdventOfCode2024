@@ -102,8 +102,8 @@ func ResolvePart1(data []string, part int) int {
 func ResolvePart2(data []string) int {
 	return ResolvePart1(data, 2)
 }
-func Resolve(data []string) [2]int {
-	return [2]int{
+func Resolve(data []string) [2]any {
+	return [2]any{
 		ResolvePart1(data, 1),
 		ResolvePart2(data),
 	}
