@@ -3,6 +3,7 @@ package Day17
 import (
 	"fmt"
 	"math"
+	"slices"
 	"strconv"
 	"strings"
 )
@@ -192,16 +193,11 @@ func ResolvePart2(data []string) int {
 	ra.value = initValue
 	registers[ra.letter] = ra
 
-	var out []string
+	var out []int
 	instructionPointer := 0
 	needToBreak := false
 	for i := len(program) - 1; i >= 0; i-- {
-		initValue *= 8
-		currTest := program[:i]
-		var currTestStr []string
-		for j := 0; j < len(currTest); j++ {
-			currTestStr = append(currTestStr, fmt.Sprintf("%d", currTest[j]))
-		}
+		initValue <<= 3
 
 		for {
 			needToBreak = false
@@ -263,7 +259,7 @@ func ResolvePart2(data []string) int {
 					if err != nil {
 						needToBreak = true
 					}
-					out = append(out, fmt.Sprintf("%d", pmod(comboOperand, 8)))
+					out = append(out, pmod(comboOperand, 8))
 					break
 				case 6: // bdv
 					comboOperand, err := getComboOperand(instructionPointer+1, program, registers, false)
@@ -294,13 +290,11 @@ func ResolvePart2(data []string) int {
 				}
 				needToIncrementTwice = true
 			}
-
-			//on compare les valeurs
-			if strings.Join(out, ",") == strings.Join(currTestStr, ",") {
+			if !slices.Equal(out, program[i:]) {
+				initValue++
+			} else {
 				break
 			}
-
-			initValue = initValue + 1
 		}
 	}
 
