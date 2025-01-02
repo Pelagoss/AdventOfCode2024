@@ -3,39 +3,34 @@ package Day18
 import (
 	"container/heap"
 	"fmt"
+	"slices"
 	"strings"
 )
 
-type Maze struct {
-	carte    [][]string
-	start    [2]int
-	end      [2]int
-	cost     int
-	finished bool
+type Memory struct {
+	carte [][]string
+	start [2]int
+	end   [2]int
 }
 
-type Reindeer struct {
+type Historian struct {
 	pos       [2]int
 	direction Direction
 	cost      int
-	lastpos   [2]int
 }
 
 type Direction struct {
-	vecteur  [2]int
-	letter   string
-	opposite string
+	vecteur [2]int
 }
 
 var (
-	nextDirections = []Direction{{[2]int{1, 0}, ">", "<"}, {[2]int{0, 1}, "v", "^"}, {[2]int{-1, 0}, "<", ">"}, {[2]int{0, -1}, "^", "v"}}
+	nextDirections = []Direction{{[2]int{1, 0}}, {[2]int{0, 1}}, {[2]int{-1, 0}}, {[2]int{0, -1}}}
 )
 
 type Result struct {
-	score    int
-	dirIndex int
-	pos      [2]int
-	path     map[[2]int]bool
+	score int
+	pos   [2]int
+	path  [][2]int
 }
 
 type ResultHeap []*Result
@@ -57,31 +52,22 @@ func (h *ResultHeap) Pop() any {
 	*h = old[0 : n-1]
 	return x
 }
-func pmod(x, d int) int {
-	x = x % d
-	if x >= 0 {
-		return x
-	}
-	if d < 0 {
-		return x - d
-	}
-	return x + d
-}
-func buildMap(data []string) (Maze, Reindeer) {
+
+func buildMap(data []string) (Memory, Historian) {
 	var carte [][]string
-	maze := Maze{}
-	reindeer := Reindeer{}
+	memory := Memory{}
+	historians := Historian{}
 
 	for y := 0; y <= 70; y++ {
 		var line []string
 		for x := 0; x <= 70; x++ {
 			if y == 0 && x == 0 {
-				maze.start = [2]int{x, y}
-				reindeer = Reindeer{pos: [2]int{x, y}, lastpos: [2]int{-1, -1}}
+				memory.start = [2]int{x, y}
+				historians = Historian{pos: [2]int{x, y}}
 			}
 
 			if y == 70 && x == 70 {
-				maze.end = [2]int{x, y}
+				memory.end = [2]int{x, y}
 			}
 
 			line = append(line, ".")
@@ -89,7 +75,13 @@ func buildMap(data []string) (Maze, Reindeer) {
 		carte = append(carte, line)
 	}
 
-	for i := 0; i < 1024; i++ {
+	memory.carte = loseBytes(carte, 0, 1024, data)
+
+	return memory, historians
+}
+
+func loseBytes(carte [][]string, start int, end int, data []string) [][]string {
+	for i := start; i < len(data) && i < end; i++ {
 		var x, y int
 
 		_, err := fmt.Sscanf(strings.ReplaceAll(data[i], ",", " , "), "%d , %d", &x, &y)
@@ -100,56 +92,82 @@ func buildMap(data []string) (Maze, Reindeer) {
 		carte[y][x] = "#"
 	}
 
-	maze.carte = carte
-
-	return maze, reindeer
+	return carte
 }
 
-func ResolvePart1(data []string) int {
-	maze, reindeer := buildMap(data)
-
+func visitMemory(memory Memory, historians Historian) (bool, [][2]int, int) {
 	heapResult := &ResultHeap{}
 	heap.Init(heapResult)
-	heap.Push(heapResult, &Result{0, 0, reindeer.pos, make(map[[2]int]bool)})
+	heap.Push(heapResult, &Result{0, historians.pos, make([][2]int, 0)})
 	visited := make(map[[3]int]bool)
 
 	for heapResult.Len() > 0 {
 		h := heap.Pop(heapResult).(*Result)
 
-		if h.pos == maze.end {
-			return h.score
+		if h.pos == memory.end {
+			return true, append(h.path, h.pos), h.score
 		}
 
-		if _, ok := visited[[3]int{h.dirIndex, h.pos[0], h.pos[1]}]; ok {
+		if _, ok := visited[[3]int{h.pos[0], h.pos[1]}]; ok {
 			continue
 		}
 
-		visited[[3]int{h.dirIndex, h.pos[0], h.pos[1]}] = true
+		visited[[3]int{h.pos[0], h.pos[1]}] = true
 
-		x := h.pos[0] + nextDirections[h.dirIndex].vecteur[0]
-		y := h.pos[1] + nextDirections[h.dirIndex].vecteur[1]
+		for i := 0; i < len(nextDirections); i++ {
+			x := h.pos[0] + nextDirections[i].vecteur[0]
+			y := h.pos[1] + nextDirections[i].vecteur[1]
 
-		isNotInMap := x < 0 || y < 0 || x >= len(maze.carte[0]) || y >= len(maze.carte)
+			isNotInMap := x < 0 || y < 0 || x >= len(memory.carte[0]) || y >= len(memory.carte)
 
-		if _, ok := visited[[3]int{h.dirIndex, x, y}]; !isNotInMap && maze.carte[y][x] == "." && !ok {
-			heap.Push(heapResult, &Result{score: h.score + 1, dirIndex: h.dirIndex, pos: [2]int{x, y}})
-		}
-
-		left := pmod(h.dirIndex-1, 4)
-		if _, ok1 := visited[[3]int{left, x, y}]; !ok1 {
-			heap.Push(heapResult, &Result{score: h.score, dirIndex: left, pos: h.pos})
-		}
-
-		right := pmod(h.dirIndex+1, 4)
-		if _, ok2 := visited[[3]int{right, x, y}]; !ok2 {
-			heap.Push(heapResult, &Result{score: h.score, dirIndex: right, pos: h.pos})
+			if _, ok := visited[[3]int{x, y}]; !ok && !isNotInMap && memory.carte[y][x] == "." {
+				heap.Push(heapResult, &Result{score: h.score + 1, pos: [2]int{x, y}, path: append(h.path, h.pos)})
+			}
 		}
 	}
 
-	return 0
+	return false, make([][2]int, 0), 0
 }
-func ResolvePart2(data []string) int {
-	return 0
+
+func ResolvePart1(data []string) int {
+	memory, historians := buildMap(data)
+
+	_, _, score := visitMemory(memory, historians)
+
+	return score
+}
+func ResolvePart2(data []string) string {
+	memory, historians := buildMap(data)
+	start := 1024
+
+	for {
+		finished, path, _ := visitMemory(memory, historians)
+
+		if finished {
+			var i int
+
+			// Find the first lost memory position that is in the path, lost it and retry
+			for i = start; i < len(data); i++ {
+				var x, y int
+
+				_, err := fmt.Sscanf(strings.ReplaceAll(data[i], ",", " , "), "%d , %d", &x, &y)
+				if err != nil {
+					panic(err)
+				}
+
+				memory.carte[y][x] = "#"
+
+				if slices.Index(path, [2]int{x, y}) != -1 {
+					start = i
+					break
+				}
+			}
+		} else {
+			break
+		}
+	}
+
+	return data[start]
 }
 func Resolve(data []string) [2]any {
 	return [2]any{
