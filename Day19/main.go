@@ -1,7 +1,6 @@
 package Day19
 
 import (
-	"container/heap"
 	"fmt"
 	"regexp"
 	"slices"
@@ -41,8 +40,8 @@ func ResolvePart1(data []string) int {
 
 type Result struct {
 	score int
-	pos   [2]int
-	path  [][2]int
+	pos   Match
+	path  []Match
 }
 
 type ResultHeap []*Result
@@ -65,8 +64,18 @@ func (h *ResultHeap) Pop() any {
 	return x
 }
 
+type Match struct {
+	start   int
+	end     int
+	pattern string
+}
+
+type Visited struct {
+	match Match
+	score int
+}
+
 func ResolvePart2(data []string) int {
-	var patterns string
 	var patternSet []string
 	design := false
 	count := 0
@@ -78,81 +87,31 @@ func ResolvePart2(data []string) int {
 		}
 
 		if design {
-			re := regexp.MustCompile(patterns)
+			var ways func(string) int
+			cache := map[string]int{}
 
-			if re.ReplaceAllString(data[i], "") == "" {
-				var t [][]int
-				t2 := make(map[int][][2]int)
+			ways = func(design string) (n int) {
+				if n, ok := cache[design]; ok {
+					return n
+				}
+				defer func() { cache[design] = n }()
 
-				for j := 0; j < len(patternSet); j++ {
-					reBis := regexp.MustCompile(patternSet[j])
-					found := reBis.FindAllStringSubmatchIndex(data[i], -1)
+				if design == "" {
+					return 1
+				}
 
-					if len(found) > 0 {
-						for l := 0; l < len(found); l++ {
-							t = append(t, found[l])
-							t2[found[l][0]] = append(t2[found[l][0]], [2]int{found[l][0], found[l][1]})
-						}
+				for _, s := range patternSet {
+					if strings.HasPrefix(design, s) {
+						n += ways(design[len(s):])
 					}
 				}
 
-				var path [][][2]int
-
-				heapResult := &ResultHeap{}
-				heap.Init(heapResult)
-				heap.Push(heapResult, &Result{
-					score: 0,
-					pos:   [2]int{0, 0},
-					path:  make([][2]int, 0),
-				})
-				visited := make(map[[3]int]bool)
-
-				for heapResult.Len() > 0 {
-					h := heap.Pop(heapResult).(*Result)
-
-					if _, ok := visited[[3]int{h.pos[0], h.pos[1], h.score}]; ok {
-						continue
-					}
-
-					if len(h.path) > 0 && h.path[len(h.path)-1][1] == len(data[i]) {
-						path = append(path, h.path)
-						continue
-					}
-
-					visited[[3]int{h.pos[0], h.pos[1], h.score}] = true
-
-					if _, ok := t2[h.pos[1]]; ok {
-						for j := 0; j < len(t2[h.pos[1]]); j++ {
-							toPush := t2[h.pos[1]][j]
-							newPath := make([][2]int, 0)
-							for k := 0; k < len(h.path); k++ {
-								newPath = append(newPath, h.path[k])
-							}
-							newPath = append(newPath, toPush)
-
-							heap.Push(heapResult, &Result{
-								score: h.score + 1,
-								pos:   toPush,
-								path:  newPath,
-							})
-						}
-					}
-				}
-
-				fmt.Println(path, len(path))
-				fmt.Println(t2)
-				fmt.Println()
-
-				count += len(path)
+				return n
 			}
+
+			count += ways(data[i])
 		} else {
 			patternSet = strings.Split(data[i], ", ")
-
-			slices.SortFunc(patternSet, func(i, j string) int {
-				return len(j) - len(i)
-			})
-
-			patterns = fmt.Sprintf("^(%s)*$", strings.Join(patternSet, "|"))
 		}
 	}
 
@@ -161,6 +120,6 @@ func ResolvePart2(data []string) int {
 func Resolve(data []string) [2]any {
 	return [2]any{
 		ResolvePart1(data),
-		ResolvePart2(data), // 45570 too low
+		ResolvePart2(data),
 	}
 }
