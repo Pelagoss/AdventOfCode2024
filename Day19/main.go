@@ -1,6 +1,7 @@
 package Day19
 
 import (
+	"container/heap"
 	"fmt"
 	"regexp"
 	"slices"
@@ -37,6 +38,33 @@ func ResolvePart1(data []string) int {
 
 	return count
 }
+
+type Result struct {
+	score int
+	pos   [2]int
+	path  [][2]int
+}
+
+type ResultHeap []*Result
+
+func (h ResultHeap) Len() int           { return len(h) }
+func (h ResultHeap) Less(i, j int) bool { return h[i].score < h[j].score }
+func (h ResultHeap) Swap(i, j int)      { h[i], h[j] = h[j], h[i] }
+
+func (h *ResultHeap) Push(x any) {
+	// Push and Pop use pointer receivers because they modify the slice's length,
+	// not just its contents.
+	*h = append(*h, x.(*Result))
+}
+
+func (h *ResultHeap) Pop() any {
+	old := *h
+	n := len(old)
+	x := old[n-1]
+	*h = old[0 : n-1]
+	return x
+}
+
 func ResolvePart2(data []string) int {
 	var patterns string
 	var patternSet []string
@@ -54,64 +82,67 @@ func ResolvePart2(data []string) int {
 
 			if re.ReplaceAllString(data[i], "") == "" {
 				var t [][]int
-				t2 := make(map[int][][]int)
+				t2 := make(map[int][][2]int)
 
-				//localCount := 0
 				for j := 0; j < len(patternSet); j++ {
 					reBis := regexp.MustCompile(patternSet[j])
 					found := reBis.FindAllStringSubmatchIndex(data[i], -1)
-					//foundStr := reBis.FindAllString(data[i], -1)
-					//fmt.Println(foundStr)
+
 					if len(found) > 0 {
 						for l := 0; l < len(found); l++ {
 							t = append(t, found[l])
-							t2[found[l][0]] = append(t2[found[l][0]], found[l])
-							//localCount++
+							t2[found[l][0]] = append(t2[found[l][0]], [2]int{found[l][0], found[l][1]})
 						}
 					}
 				}
 
-				currentIndex := 0
-				path := make(map[int][][]int)
+				var path [][][2]int
 
-				for currentIndex < len(data[i]) {
-					if _, ok := t2[currentIndex]; !ok {
-						currentIndex++
+				heapResult := &ResultHeap{}
+				heap.Init(heapResult)
+				heap.Push(heapResult, &Result{
+					score: 0,
+					pos:   [2]int{0, 0},
+					path:  make([][2]int, 0),
+				})
+				visited := make(map[[3]int]bool)
+
+				for heapResult.Len() > 0 {
+					h := heap.Pop(heapResult).(*Result)
+
+					if _, ok := visited[[3]int{h.pos[0], h.pos[1], h.score}]; ok {
 						continue
 					}
 
-					//Todo: Fix this, partir de currentIndex == 0 et créer un path par len(t2[currentIndex]) > 1 puis compter le nombres de path qui partent de 0 et finissent a len(data[i])
-					for j := 0; j < len(t2[currentIndex]); j++ {
-						if currentIndex == 0 {
-							path[j] = append(path[j], t2[currentIndex][j])
-						} else {
-							for k := 0; k < len(path); k++ {
-								if _, ok := path[k]; !ok {
-									continue
-								}
-
-								if path[k][len(path[k])-1][1] == t2[currentIndex][j][0] {
-									path[k] = append(path[k], t2[currentIndex][j])
-									if len(t2[currentIndex]) > 1 {
-										path[len(path)] = append(path[len(path)], path[j]...)
-									}
-								}
-							}
-						}
+					if len(h.path) > 1 && h.path[len(h.path)-1][1] == len(data[i]) {
+						path = append(path, h.path)
+						continue
 					}
 
-					currentIndex++
+					visited[[3]int{h.pos[0], h.pos[1], h.score}] = true
+
+					if _, ok := t2[h.pos[1]]; ok {
+						for j := 0; j < len(t2[h.pos[1]]); j++ {
+							toPush := t2[h.pos[1]][j]
+							newPath := make([][2]int, 0)
+							for k := 0; k < len(h.path); k++ {
+								newPath = append(newPath, h.path[k])
+							}
+							newPath = append(newPath, toPush)
+
+							heap.Push(heapResult, &Result{
+								score: h.score + 1,
+								pos:   toPush,
+								path:  newPath,
+							})
+						}
+					}
 				}
+
 				fmt.Println(path, len(path))
-				//fmt.Println(t)
 				fmt.Println(t2)
 				fmt.Println()
-				//panic("aa")
 
-				//for k, v := range path {
-				//	fmt.Println(k, v)
-				//}
-				fmt.Println()
 				count += len(path)
 			}
 		} else {
@@ -122,7 +153,6 @@ func ResolvePart2(data []string) int {
 			})
 
 			patterns = fmt.Sprintf("^(%s)*$", strings.Join(patternSet, "|"))
-			fmt.Println(patterns)
 		}
 	}
 
@@ -131,6 +161,6 @@ func ResolvePart2(data []string) int {
 func Resolve(data []string) [2]any {
 	return [2]any{
 		ResolvePart1(data),
-		ResolvePart2(data), // 928 too low
+		ResolvePart2(data), // 45570 too low
 	}
 }

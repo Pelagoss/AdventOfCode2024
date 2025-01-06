@@ -99,7 +99,7 @@ func visitMemory(memory Memory, historians Historian) (bool, [][2]int, int) {
 	heapResult := &ResultHeap{}
 	heap.Init(heapResult)
 	heap.Push(heapResult, &Result{0, historians.pos, make([][2]int, 0)})
-	visited := make(map[[3]int]bool)
+	visited := make(map[[2]int]bool)
 
 	for heapResult.Len() > 0 {
 		h := heap.Pop(heapResult).(*Result)
@@ -108,11 +108,11 @@ func visitMemory(memory Memory, historians Historian) (bool, [][2]int, int) {
 			return true, append(h.path, h.pos), h.score
 		}
 
-		if _, ok := visited[[3]int{h.pos[0], h.pos[1]}]; ok {
+		if _, ok := visited[[2]int{h.pos[0], h.pos[1]}]; ok {
 			continue
 		}
 
-		visited[[3]int{h.pos[0], h.pos[1]}] = true
+		visited[[2]int{h.pos[0], h.pos[1]}] = true
 
 		for i := 0; i < len(nextDirections); i++ {
 			x := h.pos[0] + nextDirections[i].vecteur[0]
@@ -120,7 +120,7 @@ func visitMemory(memory Memory, historians Historian) (bool, [][2]int, int) {
 
 			isNotInMap := x < 0 || y < 0 || x >= len(memory.carte[0]) || y >= len(memory.carte)
 
-			if _, ok := visited[[3]int{x, y}]; !ok && !isNotInMap && memory.carte[y][x] == "." {
+			if _, ok := visited[[2]int{x, y}]; !ok && !isNotInMap && memory.carte[y][x] == "." {
 				heap.Push(heapResult, &Result{score: h.score + 1, pos: [2]int{x, y}, path: append(h.path, h.pos)})
 			}
 		}
