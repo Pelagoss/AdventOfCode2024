@@ -114,7 +114,7 @@ func ResolvePart2(data []string) int {
 						continue
 					}
 
-					if len(h.path) > 1 && h.path[len(h.path)-1][1] == len(data[i]) {
+					if len(h.path) > 0 && h.path[len(h.path)-1][1] == len(data[i]) {
 						path = append(path, h.path)
 						continue
 					}
