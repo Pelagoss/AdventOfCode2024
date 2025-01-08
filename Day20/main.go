@@ -82,19 +82,19 @@ func buildMap(data []string) (RaceTrack, Historian) {
 	return raceTrack, historian
 }
 
-func visitRaceTrack(raceTrack RaceTrack, historians Historian, path [][2]int) (bool, [][2]int, int, map[int]int, int) {
+func visitRaceTrack(raceTrack RaceTrack, historians Historian, path [][2]int, cheatLength int) ([][2]int, map[int]int, map[[2][2]int]int) {
 	heapResult := &ResultHeap{}
 	heap.Init(heapResult)
 	heap.Push(heapResult, &Result{0, historians.pos, make([][2]int, 0)})
 	visited := make(map[[2]int]bool)
 	cheats := make(map[int]int)
-	cheatsAtLeast100 := 0
+	cheatsMap := make(map[[2][2]int]int)
 
 	for heapResult.Len() > 0 {
 		h := heap.Pop(heapResult).(*Result)
 
 		if h.pos == raceTrack.end {
-			return true, append(h.path, h.pos), h.score, cheats, cheatsAtLeast100
+			return append(h.path, h.pos), cheats, cheatsMap
 		}
 
 		if _, ok := visited[[2]int{h.pos[0], h.pos[1]}]; ok {
@@ -110,19 +110,41 @@ func visitRaceTrack(raceTrack RaceTrack, historians Historian, path [][2]int) (b
 			isNotInMap := x < 0 || y < 0 || x >= len(raceTrack.carte[0]) || y >= len(raceTrack.carte)
 
 			if path != nil {
-				x2 := h.pos[0] + (nextDirections[i].vecteur[0] * 2)
-				y2 := h.pos[1] + (nextDirections[i].vecteur[1] * 2)
+				heapCheat := &ResultHeap{}
+				heap.Init(heapCheat)
+				heap.Push(heapCheat, &Result{0, h.pos, make([][2]int, 0)})
 
-				index := slices.Index(path, [2]int{x2, y2})
+				visitedCheat := make(map[[2]int]bool)
+				for heapCheat.Len() > 0 {
+					h2 := heap.Pop(heapCheat).(*Result)
 
-				if index != -1 { // Cheat exists
-					picosecondsSaved := index - (h.score + 2)
+					index := slices.Index(path, h2.pos)
 
-					if picosecondsSaved > 0 {
-						cheats[picosecondsSaved]++
-
+					if index != -1 { // Cheat exists
+						picosecondsSaved := index - (h.score + h2.score)
 						if picosecondsSaved >= 100 {
-							cheatsAtLeast100++
+							_, ok := cheatsMap[[2][2]int{h.pos, h2.pos}]
+
+							if !ok || cheatsMap[[2][2]int{h.pos, h2.pos}] > picosecondsSaved {
+								cheatsMap[[2][2]int{h.pos, h2.pos}] = picosecondsSaved
+							}
+						}
+					}
+
+					if _, ok := visitedCheat[h2.pos]; ok {
+						continue
+					}
+
+					visitedCheat[h2.pos] = true
+
+					for i2 := 0; i2 < len(nextDirections); i2++ {
+						x2 := h2.pos[0] + nextDirections[i2].vecteur[0]
+						y2 := h2.pos[1] + nextDirections[i2].vecteur[1]
+
+						isNotInMap2 := x2 < 0 || y2 < 0 || x2 >= len(raceTrack.carte[0]) || y2 >= len(raceTrack.carte)
+
+						if _, ok := visitedCheat[[2]int{x2, y2}]; !ok && !isNotInMap2 && h2.score < cheatLength {
+							heap.Push(heapCheat, &Result{score: h2.score + 1, pos: [2]int{x2, y2}, path: append(h2.path, h2.pos)})
 						}
 					}
 				}
@@ -134,20 +156,36 @@ func visitRaceTrack(raceTrack RaceTrack, historians Historian, path [][2]int) (b
 		}
 	}
 
-	return false, make([][2]int, 0), 0, cheats, cheatsAtLeast100
+	return make([][2]int, 0), cheats, cheatsMap
 }
 
 func ResolvePart1(data []string) int {
 	racetrack, historian := buildMap(data)
 
-	_, path, _, _, _ := visitRaceTrack(racetrack, historian, nil)
+	path, _, _ := visitRaceTrack(racetrack, historian, nil, 2)
 
-	_, _, _, _, cheatsAtLeast100 := visitRaceTrack(racetrack, historian, path)
-
+	_, _, cheatsMap := visitRaceTrack(racetrack, historian, path, 2)
+	cheatsAtLeast100 := 0
+	for k, _ := range cheatsMap {
+		if cheatsMap[k] >= 100 {
+			cheatsAtLeast100++
+		}
+	}
 	return cheatsAtLeast100
 }
 func ResolvePart2(data []string) int {
-	return 0
+	racetrack, historian := buildMap(data)
+
+	path, _, _ := visitRaceTrack(racetrack, historian, nil, 2)
+
+	_, _, cheatsMap := visitRaceTrack(racetrack, historian, path, 20)
+	cheatsAtLeast100 := 0
+	for k, _ := range cheatsMap {
+		if cheatsMap[k] >= 100 {
+			cheatsAtLeast100++
+		}
+	}
+	return cheatsAtLeast100
 }
 func Resolve(data []string) [2]any {
 	return [2]any{
